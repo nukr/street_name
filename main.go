@@ -19,53 +19,34 @@ type CityArea struct {
 	StreetName []string `json:"street_name"`
 }
 
-var cityMap = make(map[string]map[string]CityArea)
+// CityMap ...
+type CityMap map[string]map[string]CityArea
 
 func main() {
-	parseFiles()
-	router := createRouter()
+	cityMap := make(CityMap)
+	parseFiles(cityMap)
+	router := createRouter(cityMap)
 	http.ListenAndServe(":3456", router)
 }
 
-func createRouter() *httprouter.Router {
+func createRouter(cityMap CityMap) *httprouter.Router {
 	router := httprouter.New()
-	router.GET("/city", getCity)
-	router.GET("/city_area/:city", getCityArea)
-	router.GET("/street_name/:city/:city_area", getStreetName)
+	router.GET("/city", getCity(cityMap))
+	router.GET("/city_area/:city", getCityArea(cityMap))
+	router.GET("/street_name/:city/:city_area", getStreetName(cityMap))
 	return router
 }
 
-func getCity(
-	w http.ResponseWriter,
-	r *http.Request,
-	_ httprouter.Params,
-) {
-	h := w.Header()
-	h.Add("Content-Type", "application/json")
-	var s []string
-	for k := range cityMap {
-		s = append(s, k)
-	}
-	j, _ := json.Marshal(s)
-	fmt.Fprintf(w, string(j))
-}
-
-func getCityArea(
-	w http.ResponseWriter,
-	r *http.Request,
-	p httprouter.Params,
-) {
-	city := p.ByName("city")
-	cityArea := cityMap[city]
-
-	if len(cityArea) == 0 {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, "Page Not Found")
-	} else {
+func getCity(cityMap CityMap) httprouter.Handle {
+	return func(
+		w http.ResponseWriter,
+		r *http.Request,
+		_ httprouter.Params,
+	) {
 		h := w.Header()
 		h.Add("Content-Type", "application/json")
 		var s []string
-		for k := range cityArea {
+		for k := range cityMap {
 			s = append(s, k)
 		}
 		j, _ := json.Marshal(s)
@@ -73,21 +54,48 @@ func getCityArea(
 	}
 }
 
-func getStreetName(
-	w http.ResponseWriter,
-	r *http.Request,
-	p httprouter.Params,
-) {
-	h := w.Header()
-	h.Add("Content-Type", "application/json")
-	cityName := p.ByName("city")
-	cityAreaName := p.ByName("city_area")
-	streetName := cityMap[cityName][cityAreaName]
-	j, _ := json.Marshal(streetName)
-	fmt.Fprintf(w, string(j))
+func getCityArea(cityMap CityMap) httprouter.Handle {
+	return func(
+		w http.ResponseWriter,
+		r *http.Request,
+		p httprouter.Params,
+	) {
+		city := p.ByName("city")
+		cityArea := cityMap[city]
+
+		if len(cityArea) == 0 {
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprintf(w, "Page Not Found")
+		} else {
+			h := w.Header()
+			h.Add("Content-Type", "application/json")
+			var s []string
+			for k := range cityArea {
+				s = append(s, k)
+			}
+			j, _ := json.Marshal(s)
+			fmt.Fprintf(w, string(j))
+		}
+	}
 }
 
-func parseFiles() {
+func getStreetName(cityMap CityMap) httprouter.Handle {
+	return func(
+		w http.ResponseWriter,
+		r *http.Request,
+		p httprouter.Params,
+	) {
+		h := w.Header()
+		h.Add("Content-Type", "application/json")
+		cityName := p.ByName("city")
+		cityAreaName := p.ByName("city_area")
+		streetName := cityMap[cityName][cityAreaName]
+		j, _ := json.Marshal(streetName)
+		fmt.Fprintf(w, string(j))
+	}
+}
+
+func parseFiles(cityMap CityMap) {
 	file, _ := os.Open("./streetName")
 	finfo, _ := file.Readdir(0)
 	for _, f := range finfo {
