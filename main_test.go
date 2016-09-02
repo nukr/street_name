@@ -11,6 +11,7 @@ func BenchmarkCity(b *testing.B) {
 	cityMap := make(CityMap)
 	parseFiles(cityMap)
 	server := httptest.NewServer(createRouter(cityMap))
+	defer server.Close()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		res, _ := http.Get(server.URL + "/city")
@@ -23,6 +24,7 @@ func BenchmarkCityArea(b *testing.B) {
 	cityMap := make(CityMap)
 	parseFiles(cityMap)
 	server := httptest.NewServer(createRouter(cityMap))
+	defer server.Close()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		res, _ := http.Get(server.URL + "/city_area/花蓮縣")
@@ -35,6 +37,7 @@ func BenchmarkStreetName(b *testing.B) {
 	cityMap := make(CityMap)
 	parseFiles(cityMap)
 	server := httptest.NewServer(createRouter(cityMap))
+	defer server.Close()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		res, _ := http.Get(server.URL + "/street_name/花蓮縣/吉安鄉")
