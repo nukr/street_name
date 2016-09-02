@@ -35,7 +35,11 @@ func createRouter() *httprouter.Router {
 	return router
 }
 
-func getCity(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func getCity(
+	w http.ResponseWriter,
+	r *http.Request,
+	_ httprouter.Params,
+) {
 	h := w.Header()
 	h.Add("Content-Type", "application/json")
 	var s []string
@@ -46,20 +50,34 @@ func getCity(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	fmt.Fprintf(w, string(j))
 }
 
-func getCityArea(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	h := w.Header()
-	h.Add("Content-Type", "application/json")
+func getCityArea(
+	w http.ResponseWriter,
+	r *http.Request,
+	p httprouter.Params,
+) {
 	city := p.ByName("city")
 	cityArea := cityMap[city]
-	var s []string
-	for k := range cityArea {
-		s = append(s, k)
+
+	if len(cityArea) == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(w, "Page Not Found")
+	} else {
+		h := w.Header()
+		h.Add("Content-Type", "application/json")
+		var s []string
+		for k := range cityArea {
+			s = append(s, k)
+		}
+		j, _ := json.Marshal(s)
+		fmt.Fprintf(w, string(j))
 	}
-	j, _ := json.Marshal(s)
-	fmt.Fprintf(w, string(j))
 }
 
-func getStreetName(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func getStreetName(
+	w http.ResponseWriter,
+	r *http.Request,
+	p httprouter.Params,
+) {
 	h := w.Header()
 	h.Add("Content-Type", "application/json")
 	cityName := p.ByName("city")
