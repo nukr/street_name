@@ -23,11 +23,16 @@ var cityMap = make(map[string]map[string]CityArea)
 
 func main() {
 	parseFiles()
+	router := createRouter()
+	http.ListenAndServe(":3456", router)
+}
+
+func createRouter() *httprouter.Router {
 	router := httprouter.New()
 	router.GET("/city", getCity)
 	router.GET("/city_area/:city", getCityArea)
 	router.GET("/street_name/:city/:city_area", getStreetName)
-	http.ListenAndServe(":3456", router)
+	return router
 }
 
 func getCity(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
