@@ -64,8 +64,7 @@ func getCityArea(cityMap CityMap) httprouter.Handle {
 		cityArea := cityMap[city]
 
 		if len(cityArea) == 0 {
-			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprintf(w, "Page Not Found")
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		} else {
 			h := w.Header()
 			h.Add("Content-Type", "application/json")
