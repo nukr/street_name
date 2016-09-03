@@ -1,10 +1,25 @@
 package main
 
 import (
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
+
+func TestCity(t *testing.T) {
+	cityMap := make(CityMap)
+	parseFiles(cityMap)
+	server := httptest.NewServer(createRouter(cityMap))
+	defer server.Close()
+	res, _ := http.Get(server.URL + "/city")
+	b, _ := ioutil.ReadAll(res.Body)
+	defer res.Body.Close()
+	if strings.Index(string(b), "花蓮縣") == -1 {
+		t.Error("result data is not expected")
+	}
+}
 
 func BenchmarkCity(b *testing.B) {
 	b.StopTimer()
