@@ -31,10 +31,25 @@ func main() {
 
 func createRouter(cityMap CityMap) *httprouter.Router {
 	router := httprouter.New()
+	router.GET("/healthz", healthCheck(cityMap))
 	router.GET("/city", getCity(cityMap))
 	router.GET("/city_area/:city", getCityArea(cityMap))
 	router.GET("/street_name/:city/:city_area", getStreetName(cityMap))
 	return router
+}
+
+func healthCheck(cityMap CityMap) httprouter.Handle {
+	return func(
+		w http.ResponseWriter,
+		r *http.Request,
+		_ httprouter.Params,
+	) {
+		h := w.Header()
+		h.Add("Cache-Control", "no-cache, no-store, must-revalidate")
+		h.Add("Pragma", "no-cache")
+		h.Add("Expires", "0")
+		fmt.Fprintf(w, "OK")
+	}
 }
 
 func getCity(cityMap CityMap) httprouter.Handle {
