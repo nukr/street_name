@@ -59,7 +59,7 @@ func getCity(cityMap CityMap) httprouter.Handle {
 		_ httprouter.Params,
 	) {
 		h := w.Header()
-		h.Add("Content-Type", "application/json")
+		h.Add("Content-Type", "application/json; charset=utf-8")
 		var s []string
 		for k := range cityMap {
 			s = append(s, k)
@@ -82,7 +82,7 @@ func getCityArea(cityMap CityMap) httprouter.Handle {
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		} else {
 			h := w.Header()
-			h.Add("Content-Type", "application/json")
+			h.Add("Content-Type", "application/json; charset=utf-8")
 			var s []string
 			for k := range cityArea {
 				s = append(s, k)
@@ -100,7 +100,7 @@ func getStreetName(cityMap CityMap) httprouter.Handle {
 		p httprouter.Params,
 	) {
 		h := w.Header()
-		h.Add("Content-Type", "application/json")
+		h.Add("Content-Type", "application/json; charset=utf-8")
 		cityName := p.ByName("city")
 		cityAreaName := p.ByName("city_area")
 		streetName := cityMap[cityName][cityAreaName]
