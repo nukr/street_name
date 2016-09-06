@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -110,13 +111,28 @@ func getStreetName(cityMap CityMap) httprouter.Handle {
 }
 
 func parseFiles(cityMap CityMap) {
-	file, _ := os.Open("./streetName")
-	finfo, _ := file.Readdir(0)
+	file, err := os.Open("./streetName")
+	if err != nil {
+		log.Fatal(err)
+	}
+	finfo, err := file.Readdir(0)
+	if err != nil {
+		log.Fatal(err)
+	}
 	for _, f := range finfo {
-		streetFile, _ := os.Open("./streetName/" + f.Name())
-		streetName, _ := ioutil.ReadAll(streetFile)
+		streetFile, err := os.Open("./streetName/" + f.Name())
+		if err != nil {
+			log.Fatal(err)
+		}
+		streetName, err := ioutil.ReadAll(streetFile)
+		if err != nil {
+			log.Fatal(err)
+		}
 		arr := strings.Split(f.Name(), "_")
-		zip, _ := strconv.Atoi(arr[0])
+		zip, err := strconv.Atoi(arr[0])
+		if err != nil {
+			log.Fatal(err)
+		}
 		city := arr[1]
 		cityArea := strings.Replace(arr[2], ".txt", "", 1)
 		if cityMap[city] == nil {
