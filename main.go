@@ -23,26 +23,31 @@ type CityArea struct {
 // CityMap ...
 type CityMap map[string]map[string]CityArea
 
+// CountryMap ...
+type CountryMap map[string]CityMap
+
 func main() {
-	cityMap := make(CityMap)
-	parseFiles(cityMap)
-	router := createRouter(cityMap)
+	router := createRouter()
 	http.ListenAndServe(":3456", router)
 }
 
-func createRouter(cityMap CityMap) *httprouter.Router {
+func createRouter() *httprouter.Router {
+	countryMap := make(CountryMap)
+	countryList := make(map[string][]string)
+	parseFiles(countryMap, countryList)
 	router := httprouter.New()
-	router.GET("/healthz", healthCheck(cityMap))
-	router.GET("/city", getCity(cityMap))
-	router.GET("/city_area/:city", getCityArea(cityMap))
-	router.GET("/street_name/:city/:city_area", getStreetName(cityMap))
+	router.GET("/healthz", healthCheck())
+	router.GET("/list", getCountry(countryList))
+	router.GET("/list/:country", getCity(countryMap))
+	router.GET("/list/:country/:city", getCityArea(countryMap))
+	router.GET("/list/:country/:city/:city_area", getStreetName(countryMap))
 	return router
 }
 
-func healthCheck(cityMap CityMap) httprouter.Handle {
+func healthCheck() httprouter.Handle {
 	return func(
 		w http.ResponseWriter,
-		r *http.Request,
+		req *http.Request,
 		_ httprouter.Params,
 	) {
 		h := w.Header()
@@ -53,34 +58,59 @@ func healthCheck(cityMap CityMap) httprouter.Handle {
 	}
 }
 
-func getCity(cityMap CityMap) httprouter.Handle {
+func getCountry(countryList map[string][]string) httprouter.Handle {
 	return func(
 		w http.ResponseWriter,
-		r *http.Request,
+		req *http.Request,
 		_ httprouter.Params,
 	) {
 		h := w.Header()
 		h.Add("Content-Type", "application/json; charset=utf-8")
-		var s []string
-		for k := range cityMap {
-			s = append(s, k)
+		acceptLang := strings.Split(strings.ToLower(req.Header.Get("Accept-Language")), ",")[0]
+		if acceptLang == "" {
+			acceptLang = "zh-tw"
 		}
-		j, _ := json.Marshal(s)
+		j, _ := json.Marshal(countryList[acceptLang])
 		fmt.Fprintf(w, string(j))
 	}
 }
 
-func getCityArea(cityMap CityMap) httprouter.Handle {
+func getCity(countryMap CountryMap) httprouter.Handle {
 	return func(
 		w http.ResponseWriter,
-		r *http.Request,
+		req *http.Request,
 		p httprouter.Params,
 	) {
+		country := p.ByName("country")
+		if countryMap[country] == nil {
+			http.Error(w, http.StatusText(http.StatusNoContent), http.StatusNoContent)
+		} else {
+			h := w.Header()
+			h.Add("Content-Type", "application/json; charset=utf-8")
+			var s []string
+			for k := range countryMap[country] {
+				s = append(s, k)
+			}
+			j, _ := json.Marshal(s)
+			fmt.Fprintf(w, string(j))
+		}
+	}
+}
+
+func getCityArea(countryMap CountryMap) httprouter.Handle {
+	return func(
+		w http.ResponseWriter,
+		req *http.Request,
+		p httprouter.Params,
+	) {
+		country := p.ByName("country")
 		city := p.ByName("city")
+
+		cityMap := countryMap[country]
 		cityArea := cityMap[city]
 
-		if len(cityArea) == 0 {
-			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		if cityMap == nil || cityArea == nil {
+			http.Error(w, http.StatusText(http.StatusNoContent), http.StatusNoContent)
 		} else {
 			h := w.Header()
 			h.Add("Content-Type", "application/json; charset=utf-8")
@@ -94,23 +124,60 @@ func getCityArea(cityMap CityMap) httprouter.Handle {
 	}
 }
 
-func getStreetName(cityMap CityMap) httprouter.Handle {
+func getStreetName(countryMap CountryMap) httprouter.Handle {
 	return func(
 		w http.ResponseWriter,
-		r *http.Request,
+		req *http.Request,
 		p httprouter.Params,
 	) {
 		h := w.Header()
 		h.Add("Content-Type", "application/json; charset=utf-8")
+		countryName := p.ByName("country")
 		cityName := p.ByName("city")
 		cityAreaName := p.ByName("city_area")
-		streetName := cityMap[cityName][cityAreaName]
-		j, _ := json.Marshal(streetName)
-		fmt.Fprintf(w, string(j))
+
+		cityMap := countryMap[countryName]
+		cityAreaMap := cityMap[cityName]
+
+		if cityMap == nil || cityAreaMap == nil {
+			http.Error(w, http.StatusText(http.StatusNoContent), http.StatusNoContent)
+		} else {
+			streetName := cityAreaMap[cityAreaName]
+			j, _ := json.Marshal(streetName)
+			fmt.Fprintf(w, string(j))
+		}
 	}
 }
 
-func parseFiles(cityMap CityMap) {
+func parseCountryList(countryList map[string][]string) {
+	countryListDir, err := os.Open("./country_list")
+	if err != nil {
+		log.Fatal(err)
+	}
+	countryListFilesInfo, err := countryListDir.Readdir(0)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, f := range countryListFilesInfo {
+		countryFile, err := os.Open("./country_list/" + f.Name())
+		if err != nil {
+			log.Fatal(err)
+		}
+		b, err := ioutil.ReadAll(countryFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if b[len(b)-1] == byte(10) {
+			b = b[:len(b)-1]
+		}
+		countryList[f.Name()] = strings.Split(string(b), "\n")
+	}
+}
+
+func parseCountryMap(countryMap CountryMap) {
+	countryMap["台灣"] = make(CityMap)
+	cityMap := countryMap["台灣"]
 	file, err := os.Open("./streetName")
 	if err != nil {
 		log.Fatal(err)
@@ -144,4 +211,9 @@ func parseFiles(cityMap CityMap) {
 			StreetName: strings.Split(string(streetName), ","),
 		}
 	}
+}
+
+func parseFiles(countryMap CountryMap, countryList map[string][]string) {
+	parseCountryList(countryList)
+	parseCountryMap(countryMap)
 }
