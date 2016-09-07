@@ -1,7 +1,7 @@
 # street name
 
 ## Installation
-`go run main.go`
+[download](https://github.com/nukr/street_name/releases/download/v0.1.7/street_name.zip)
 
 ## Usage
 ```bash
