@@ -5,7 +5,23 @@
 
 ## Usage
 ```bash
-curl /city
+curl /yourdomain.com/list
+# [
+#   "台灣",
+#   "韓國",
+#   "中國"
+#   "..."
+# ]
+
+curl /yourdomain.com/list -H "Accept-Language: en-us"
+# [
+#   "台灣",
+#   "Korea",
+#   "China"
+#   "..."
+# ]
+
+curl /yourdomain.com/list/台灣
 # [
 #   "花蓮縣",
 #   "台北縣",
@@ -13,14 +29,14 @@ curl /city
 #   "..."
 # ]
 
-curl /city_area/花蓮縣
+curl /yourdomain.com/list/花蓮縣
 # [
 #   "吉安鄉",
 #   "花蓮市",
 #   "..."
 # ]
 
-curl /street_name/花蓮縣/吉安鄉
+curl /yourdomain.com/list/花蓮縣/吉安鄉
 # {
 #   name: "吉安鄉",
 #   zip: 973,
