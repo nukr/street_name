@@ -26,9 +26,13 @@ type CityMap map[string]map[string]CityArea
 // CountryMap ...
 type CountryMap map[string]CityMap
 
+var port = 3456
+
 func main() {
 	router := createRouter()
-	http.ListenAndServe(":3456", router)
+	addr := fmt.Sprintf(":%d", port)
+	log.Printf("server listen on port %s\n", addr)
+	log.Fatal(http.ListenAndServe(addr, router))
 }
 
 func createRouter() *httprouter.Router {
@@ -38,10 +42,28 @@ func createRouter() *httprouter.Router {
 	router := httprouter.New()
 	router.GET("/healthz", healthCheck())
 	router.GET("/list", getCountry(countryList))
+	router.OPTIONS("/list", responseOptions())
 	router.GET("/list/:country", getCity(countryMap))
+	router.OPTIONS("/list/:country", responseOptions())
 	router.GET("/list/:country/:city", getCityArea(countryMap))
+	router.OPTIONS("/list/:country/:city", responseOptions())
 	router.GET("/list/:country/:city/:city_area", getStreetName(countryMap))
+	router.OPTIONS("/list/:country/:city/:city_area", responseOptions())
 	return router
+}
+
+func responseOptions() httprouter.Handle {
+	return func(
+		w http.ResponseWriter,
+		r *http.Request,
+		_ httprouter.Params,
+	) {
+		h := w.Header()
+		h.Add("Access-Control-Allow-Origin", "*")
+		h.Add("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE")
+		h.Add("Access-Control-Allow-Headers", "Accept-Language, Content-Type")
+		w.WriteHeader(204)
+	}
 }
 
 func healthCheck() httprouter.Handle {
@@ -82,13 +104,13 @@ func getCity(countryMap CountryMap) httprouter.Handle {
 		req *http.Request,
 		p httprouter.Params,
 	) {
+		h := w.Header()
+		h.Add("Content-Type", "application/json; charset=utf-8")
+		h.Add("Access-Control-Allow-Origin", "*")
 		country := p.ByName("country")
 		if countryMap[country] == nil {
 			http.Error(w, http.StatusText(http.StatusNoContent), http.StatusNoContent)
 		} else {
-			h := w.Header()
-			h.Add("Content-Type", "application/json; charset=utf-8")
-			h.Add("Access-Control-Allow-Origin", "*")
 			var s []string
 			for k := range countryMap[country] {
 				s = append(s, k)
@@ -111,12 +133,12 @@ func getCityArea(countryMap CountryMap) httprouter.Handle {
 		cityMap := countryMap[country]
 		cityArea := cityMap[city]
 
+		h := w.Header()
+		h.Add("Content-Type", "application/json; charset=utf-8")
+		h.Add("Access-Control-Allow-Origin", "*")
 		if cityMap == nil || cityArea == nil {
 			http.Error(w, http.StatusText(http.StatusNoContent), http.StatusNoContent)
 		} else {
-			h := w.Header()
-			h.Add("Content-Type", "application/json; charset=utf-8")
-			h.Add("Access-Control-Allow-Origin", "*")
 			var s []string
 			for k := range cityArea {
 				s = append(s, k)
