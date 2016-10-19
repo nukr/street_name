@@ -66,6 +66,7 @@ func getCountry(countryList map[string][]string) httprouter.Handle {
 	) {
 		h := w.Header()
 		h.Add("Content-Type", "application/json; charset=utf-8")
+		h.Add("Access-Control-Allow-Origin", "*")
 		acceptLang := strings.Split(strings.ToLower(req.Header.Get("Accept-Language")), ",")[0]
 		if acceptLang == "" {
 			acceptLang = "zh-tw"
@@ -87,6 +88,7 @@ func getCity(countryMap CountryMap) httprouter.Handle {
 		} else {
 			h := w.Header()
 			h.Add("Content-Type", "application/json; charset=utf-8")
+			h.Add("Access-Control-Allow-Origin", "*")
 			var s []string
 			for k := range countryMap[country] {
 				s = append(s, k)
@@ -114,6 +116,7 @@ func getCityArea(countryMap CountryMap) httprouter.Handle {
 		} else {
 			h := w.Header()
 			h.Add("Content-Type", "application/json; charset=utf-8")
+			h.Add("Access-Control-Allow-Origin", "*")
 			var s []string
 			for k := range cityArea {
 				s = append(s, k)
@@ -132,6 +135,7 @@ func getStreetName(countryMap CountryMap) httprouter.Handle {
 	) {
 		h := w.Header()
 		h.Add("Content-Type", "application/json; charset=utf-8")
+		h.Add("Access-Control-Allow-Origin", "*")
 		countryName := p.ByName("country")
 		cityName := p.ByName("city")
 		cityAreaName := p.ByName("city_area")
