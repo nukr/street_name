@@ -1,3 +1,5 @@
 # Tab indentation (no size specified)
+[*]
+max_line_length = 80
 [Makefile]
 indent_style = tab

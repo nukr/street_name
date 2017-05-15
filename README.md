@@ -1,11 +1,11 @@
 # street name
 
 ## Installation
-[download](https://github.com/nukr/street_name/releases/download/v0.1.7/street_name.zip)
+go get
 
 ## Usage
 ```bash
-curl /yourdomain.com/list
+curl http://yourdomain/list
 # [
 #   "台灣",
 #   "韓國",
@@ -13,7 +13,7 @@ curl /yourdomain.com/list
 #   "..."
 # ]
 
-curl /yourdomain.com/list -H "Accept-Language: en-us"
+curl http://yourdomain/list -H "Accept-Language: en-us"
 # [
 #   "台灣",
 #   "Korea",
@@ -21,7 +21,7 @@ curl /yourdomain.com/list -H "Accept-Language: en-us"
 #   "..."
 # ]
 
-curl /yourdomain.com/list/台灣
+curl http://yourdomain/list/台灣
 # [
 #   "花蓮縣",
 #   "台北縣",
@@ -29,14 +29,14 @@ curl /yourdomain.com/list/台灣
 #   "..."
 # ]
 
-curl /yourdomain.com/list/花蓮縣
+curl http://yourdomain/list/花蓮縣
 # [
 #   "吉安鄉",
 #   "花蓮市",
 #   "..."
 # ]
 
-curl /yourdomain.com/list/花蓮縣/吉安鄉
+curl http://yourdomain/list/花蓮縣/吉安鄉
 # {
 #   name: "吉安鄉",
 #   zip: 973,
